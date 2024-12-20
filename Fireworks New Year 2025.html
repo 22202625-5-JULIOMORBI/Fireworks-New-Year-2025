@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy New Year 2025</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            background: radial-gradient(circle, #020024, #000024, #000);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        @keyframes textSparks {
+            0%, 100% {
+                text-shadow: 0 0 10px #ff0, 0 0 20px #ff8, 0 0 30px #ff0, 0 0 40px #f06;
+            }
+            50% {
+                text-shadow: 0 0 20px #f06, 0 0 30px #ff0, 0 0 40px #ff8;
+            }
+        }
+
+        canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .message {
+            position: absolute;
+            font-family: 'Arial', sans-serif;
+            font-size: 4rem;
+            font-weight: bold;
+            color: #fff;
+            animation: textSparks 3s infinite alternate;
+            opacity: 0;
+            animation: fadeIn 4s ease forwards;
+            animation-delay: 10s;
+        }
+
+        @keyframes fadeIn {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="fireworksCanvas"></canvas>
+    <div class="message">HAPPY NEW YEAR 2025</div>
+
+    <script>
+        const canvas = document.getElementById('fireworksCanvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Firework {
+            constructor(x, y, color, type) {
+                this.x = x;
+                this.y = y;
+                this.color = color;
+                this.type = type; // type to vary explosion styles
+                this.sparks = [];
+                this.trail = [];
+                this.vx = Math.random() * 2 - 1;
+                this.vy = -(Math.random() * 5 + 6);
+                this.exploded = false;
+                this.timer = Math.random() * 60 + 80;
+            }
+
+            update() {
+                if (!this.exploded) {
+                    this.trail.push({ x: this.x, y: this.y, alpha: 0.5 });
+                    if (this.trail.length > 10) this.trail.shift();
+                    this.x += this.vx;
+                    this.y += this.vy;
+                    this.vy += 0.05; // gravity effect
+                    this.timer--;
+                    if (this.timer <= 0) {
+                        this.explode();
+                    }
+                } else {
+                    this.sparks.forEach(spark => {
+                        spark.x += spark.vx;
+                        spark.y += spark.vy;
+                        spark.vy += 0.02; // gravity on sparks
+                        spark.alpha -= 0.02;
+                    });
+                    this.sparks = this.sparks.filter(spark => spark.alpha > 0);
+                }
+            }
+
+            explode() {
+                this.exploded = true;
+                const sparkCount = this.type === 'circle' ? 150 : 80;
+                for (let i = 0; i < sparkCount; i++) {
+                    const angle = this.type === 'circle' ? i * (Math.PI * 2 / sparkCount) : Math.random() * Math.PI * 2;
+                    const speed = Math.random() * 3 + 1;
+                    const vx = Math.cos(angle) * speed;
+                    const vy = Math.sin(angle) * speed;
+                    this.sparks.push({
+                        x: this.x,
+                        y: this.y,
+                        vx,
+                        vy,
+                        alpha: 1
+                    });
+                }
+            }
+
+            draw() {
+                // Draw the trail
+                ctx.beginPath();
+                this.trail.forEach((point, index) => {
+                    ctx.fillStyle = `rgba(${this.color}, ${point.alpha * (index / this.trail.length)})`;
+                    ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                if (!this.exploded) {
+                    ctx.fillStyle = this.color;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    this.sparks.forEach(spark => {
+                        ctx.fillStyle = `rgba(${this.color}, ${spark.alpha})`;
+                        ctx.beginPath();
+                        ctx.arc(spark.x, spark.y, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    });
+                }
+            }
+        }
+
+        let fireworks = [];
+
+        function animate() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            if (Math.random() < 0.05) {
+                const x = Math.random() * canvas.width;
+                const y = canvas.height;
+                const type = Math.random() > 0.5 ? 'circle' : 'random';
+                const color = `${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}, ${Math.floor(Math.random() * 255)}`;
+                fireworks.push(new Firework(x, y, `rgb(${color})`, type));
+            }
+
+            fireworks.forEach(firework => {
+                firework.update();
+                firework.draw();
+            });
+
+            fireworks = fireworks.filter(firework => firework.sparks.length > 0 || !firework.exploded);
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+    </script>
+</body>
+</html>
